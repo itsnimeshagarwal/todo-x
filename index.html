@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super To-Do List</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="day-theme">
+
+    <!-- PIN-Lock Mode Modal -->
+    <div class="modal-overlay" id="pin-lock-modal">
+        <div class="modal-content glass-card">
+            <h2 id="pin-title">Welcome! Set a PIN</h2>
+            <p id="pin-message">Create a 4-digit PIN to secure your app.</p>
+            <input type="password" id="pin-input" maxlength="4" placeholder="••••">
+            <button id="pin-btn">Set PIN</button>
+            <p id="pin-error" class="error-message"></p>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div class="app-container" id="app-container">
+        <header class="app-header">
+            <h1>Super To-Do List</h1>
+            <div class="header-actions">
+                <div class="theme-switcher">
+                    <button id="theme-day-btn" class="active" title="Day Theme">☀️</button>
+                    <button id="theme-night-btn" title="Night Theme">🌙</button>
+                    <button id="theme-hacker-btn" title="Hacker Theme">👨‍💻</button>
+                    <button id="theme-neon-btn" title="Neon Theme">🌈</button>
+                </div>
+                <button id="magic-button" title="Get a random tip">✨ Magic Tip</button>
+                <div class="file-io">
+                    <button id="export-btn" title="Export tasks"><i class="fas fa-file-export"></i></button>
+                    <label for="import-file" class="import-label" title="Import tasks"><i class="fas fa-file-import"></i></label>
+                    <input type="file" id="import-file" accept=".json" style="display: none;">
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <section class="left-panel">
+                <div class="task-input-section">
+                    <form id="task-form">
+                        <input type="text" id="task-input" placeholder="Add a new task..." aria-label="New task input">
+                        <button id="add-task-btn" type="submit" aria-label="Add new task"><i class="fas fa-plus"></i></button>
+                    </form>
+                </div>
+
+                <div class="filter-bar">
+                    <button id="filter-all-btn" class="active">All</button>
+                    <button id="filter-active-btn">Active</button>
+                    <button id="filter-completed-btn">Completed</button>
+                    <button id="feeling-lucky-btn" title="Pick a random task">🎲 I'm Feeling Lucky</button>
+                    <button id="focus-mode-btn" title="Enter focus mode"><i class="fas fa-bullseye"></i> Focus</button>
+                    <button id="clean-mode-btn" title="Toggle Clean Mode"><i class="fas fa-eraser"></i> Clean Mode</button>
+                    <button id="clear-all-btn" title="Clear all tasks"><i class="fas fa-broom"></i> Clear All</button>
+                </div>
+
+                <ul id="todo-list" role="list"></ul>
+                
+                <div id="motivation-meter" class="motivation-meter">
+                    <div id="motivation-bar" class="motivation-bar"></div>
+                    <span id="motivation-message" class="motivation-message"></span>
+                </div>
+
+                <!-- Drag to Delete Box -->
+                <div id="delete-box" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                    <i class="fas fa-trash-alt fa-2x"></i>
+                    <p>Drag tasks here to delete</p>
+                </div>
+            </section>
+            
+            <aside class="right-panel glass-card">
+                <!-- Daily Challenge Panel -->
+                <div class="panel daily-challenge-panel">
+                    <h3>🧙 Daily Challenge</h3>
+                    <p id="daily-challenge-text"></p>
+                    <button id="daily-challenge-btn" disabled>Complete Challenge</button>
+                </div>
+
+                <!-- Pomodoro Timer -->
+                <div class="panel pomodoro-panel">
+                    <h3>Pomodoro Timer</h3>
+                    <div id="timer-display">25:00</div>
+                    <div class="timer-controls">
+                        <button id="timer-start-btn" aria-label="Start timer"><i class="fas fa-play"></i></button>
+                        <button id="timer-pause-btn" aria-label="Pause timer" disabled><i class="fas fa-pause"></i></button>
+                        <button id="timer-reset-btn" aria-label="Reset timer"><i class="fas fa-sync-alt"></i></button>
+                        <button id="zen-timer-btn" aria-label="Start Zen Timer">🧘 Zen</button>
+                    </div>
+                    <div class="progress-bar-container"><div id="timer-progress-bar"></div></div>
+                </div>
+
+                <!-- Calendar Panel -->
+                <div class="panel calendar-panel">
+                    <h3>Calendar</h3>
+                    <div class="calendar-header">
+                        <button id="prev-month-btn" aria-label="Previous month"><i class="fas fa-chevron-left"></i></button>
+                        <h4 id="current-month-year"></h4>
+                        <button id="next-month-btn" aria-label="Next month"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                    <div id="calendar"></div>
+                </div>
+
+                <!-- Effort Estimator -->
+                <div class="panel effort-panel">
+                    <h3>Effort Estimate (Today)</h3>
+                    <div class="progress-bar-container"><div id="daily-effort-bar"></div></div>
+                    <span id="daily-effort-text">0 / 100 Effort</span>
+                </div>
+
+                <!-- Analytics & Gamification Panel -->
+                <div class="panel stats-panel">
+                    <h3>Productivity Analytics</h3>
+                    <div class="stats-grid">
+                        <div class="stats-item">
+                            <canvas id="stats-chart"></canvas>
+                        </div>
+                        <div class="stats-item">
+                            <p id="completion-rate"></p>
+                            <p id="streak-info"></p>
+                            <div class="xp-bar-container">
+                                <span id="xp-display">XP: 0</span>
+                                <div class="xp-bar"><div id="xp-bar-fill"></div></div>
+                            </div>
+                            <div id="badges-container"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Suggestions Panel -->
+                <div class="panel suggestions-panel" id="suggestions-panel">
+                    <h3>💡 Smart Suggestions</h3>
+                    <p id="suggestion-text"></p>
+                </div>
+            </aside>
+        </main>
+    </div>
+    
+    <!-- Task Details Modal -->
+    <div class="modal-overlay" id="task-details-modal">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h2 id="task-details-title"></h2>
+                <button class="close-btn" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Mood Tagging -->
+                <div class="mood-section">
+                    <h4>Mood: <span id="current-mood-tag"></span></h4>
+                    <div class="mood-selector" id="mood-selector">
+                        <button class="mood-btn" data-mood="😎">😎</button>
+                        <button class="mood-btn" data-mood="😩">😩</button>
+                        <button class="mood-btn" data-mood="😡">😡</button>
+                        <button class="mood-btn" data-mood="😇">😇</button>
+                    </div>
+                </div>
+                <!-- Effort Estimator -->
+                <div class="effort-section">
+                    <h4>Effort (1-10): <span id="effort-value">5</span></h4>
+                    <input type="range" id="effort-slider" min="1" max="10" value="5">
+                </div>
+                <!-- Subtasks Section -->
+                <div class="subtask-section">
+                    <h4>Subtasks:</h4>
+                    <ul class="subtask-list" id="subtask-list"></ul>
+                    <div class="progress-bar-container"><div id="subtask-progress-fill"></div></div>
+                    <form id="subtask-form">
+                        <input type="text" id="subtask-input" placeholder="Add a new subtask..." aria-label="Add new subtask">
+                        <button type="submit" style="display: none;"></button>
+                    </form>
+                </div>
+                <!-- Notes Section -->
+                <div class="notes-section">
+                    <h4>Notes:</h4>
+                    <textarea id="task-notes" placeholder="Add detailed notes..." aria-label="Task notes"></textarea>
+                </div>
+                <!-- Photo Attachment Section -->
+                <div class="photo-section">
+                    <h4>Photo:</h4>
+                    <input type="file" id="photo-input" accept="image/*">
+                    <img id="task-photo-preview" src="#" alt="Task photo preview" style="display:none;">
+                </div>
+                <!-- Task History Timeline -->
+                <div class="history-section">
+                    <h4>Task History (Timelapse):</h4>
+                    <ul class="history-list" id="history-list"></ul>
+                </div>
+                
+                <button id="save-task-details-btn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Geo-based Task Modal -->
+    <div class="modal-overlay" id="geo-task-modal">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h2>Set Location</h2>
+                <button class="close-btn" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="map-container">
+                    <img id="static-map" src="https://placehold.co/400x300/e0e0e0/222?text=Static+Map+Here" alt="Static Map Placeholder" />
+                    <p>Static map view (interactive features are disabled).</p>
+                </div>
+                <input type="text" id="location-input" placeholder="Enter location name...">
+                <button id="save-location-btn">Save Location</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal-overlay" id="confirmation-modal">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h2 id="confirmation-title">Clear All?</h2>
+                <button class="close-btn" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmation-message">This will permanently delete all your tasks. Are you sure?</p>
+                <div class="confirm-buttons">
+                    <button id="confirm-action-btn">Yes, Clear All</button>
+                    <button id="cancel-action-btn">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- AI Assistant Modal -->
+    <div class="ai-assistant" id="ai-assistant">
+        <div class="assistant-header" id="assistant-header">
+            <h3>AI Assistant</h3>
+            <button class="close-btn">&times;</button>
+        </div>
+        <div class="assistant-body" id="assistant-body">
+            <div class="assistant-message">Hello! How can I help you be productive?</div>
+        </div>
+    </div>
+
+    <!-- Focus Mode Overlay -->
+    <div id="focus-mode-overlay">
+        <div id="focus-mode-content" class="glass-card">
+            <h2 id="focus-mode-task-title"></h2>
+            <div id="focus-mode-timer-display">25:00</div>
+            <p class="focus-exit-text">Press ESC to exit focus mode.</p>
+        </div>
+    </div>
+
+    <!-- Zen Timer Modal -->
+    <div class="modal-overlay" id="zen-timer-modal">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h2>Zen Timer</h2>
+                <button class="close-btn" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="breathing-circle-container">
+                    <div class="breathing-circle" id="breathing-circle"></div>
+                </div>
+                <div id="zen-timer-display">5:00</div>
+                <p id="breathing-guide">Breathe In...</p>
+                <button id="zen-start-btn">Start</button>
+                <button id="zen-stop-btn" style="display: none;">Stop</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast/Notification Area -->
+    <div id="toast-container"></div>
+    
+    <script src="script.js"></script>
+
+    <!-- New Footer with Copyright -->
+    <footer class="app-footer">
+        <p>&copy; <span id="current-year"></span> Super To-Do List. All Rights Reserved.</p>
+    </footer>
+
+</body>
+</html>
